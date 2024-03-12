@@ -27,6 +27,5 @@ namespace WAD.CW1._14557.DAL
 
 			return services;
 		}
-		
     }
 }
