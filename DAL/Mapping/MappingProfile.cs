@@ -1,6 +1,7 @@
 ﻿using static System.Runtime.InteropServices.JavaScript.JSType;
 using WAD.CW1._14557.Models;
 using WAD.CW1._14557.Dtos;
+using AutoMapper;
 
 namespace WAD.CW1._14557.Mapping
 {
