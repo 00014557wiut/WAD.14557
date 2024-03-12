@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using WAD.CW1._14557.AppData;
+using WAD.CW1._14557.DAL.Interfaces;
+using WAD.CW1._14557.DAL.Repositories;
 
 namespace WAD.CW1._14557.DAL
 {
@@ -17,6 +19,9 @@ namespace WAD.CW1._14557.DAL
 			IConfiguration configuration
 		)
 		{
+			services.AddScoped<ICommentRepository, CommentRepository>();
+			services.AddScoped<IIssueRepository, IssueRepository>();
+
 			services.AddDbContext<ApplicationDbContext>(options =>
 					options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
 
