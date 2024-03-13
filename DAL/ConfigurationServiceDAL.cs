@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using WAD.CW1._14557.AppData;
@@ -24,6 +25,8 @@ namespace WAD.CW1._14557.DAL
 
 			services.AddDbContext<ApplicationDbContext>(options =>
 					options.UseSqlServer(configuration.GetConnectionString("DefaultConnection")));
+
+			services.AddAutoMapper(Assembly.GetExecutingAssembly());
 
 			return services;
 		}

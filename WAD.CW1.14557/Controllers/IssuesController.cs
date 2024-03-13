@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WAD.CW1._14557.DAL.Interfaces;
+using WAD.CW1._14557.Dtos;
 using WAD.CW1._14557.Models;
 
 [Route("api/[controller]")]
@@ -9,56 +11,50 @@ using WAD.CW1._14557.Models;
 public class IssuesController : ControllerBase
 {
 	private readonly IIssueRepository _issueRepository;
+	private readonly IMapper _mapper;
 
-	public IssuesController(IIssueRepository issueRepository)
+	public IssuesController(IIssueRepository issueRepository, IMapper mapper)
 	{
 		_issueRepository = issueRepository;
+		_mapper = mapper;
 	}
 
-	// GET: api/issues
 	[HttpGet]
-	public async Task<ActionResult<IEnumerable<Issue>>> GetIssues()
+	public async Task<ActionResult<IEnumerable<IssueReadDto>>> GetAllIssues()
 	{
 		var issues = await _issueRepository.GetAllIssuesAsync();
-		return Ok(issues);
+		return Ok(_mapper.Map<IEnumerable<IssueReadDto>>(issues));
 	}
 
-	// GET: api/issues/{id}
-	[HttpGet("{id}")]
-	public async Task<ActionResult<Issue>> GetIssue(int id)
+	[HttpGet("{id}", Name = "GetIssueById")]
+	public async Task<ActionResult<IssueReadDto>> GetIssueById(int id)
 	{
 		var issue = await _issueRepository.GetIssueByIdAsync(id);
-
-		if (issue == null)
-		{
-			return NotFound();
-		}
-
-		return Ok(issue);
+		if (issue == null) return NotFound();
+		return Ok(_mapper.Map<IssueReadDto>(issue));
 	}
 
-	// POST: api/issues
 	[HttpPost]
-	public async Task<ActionResult<Issue>> PostIssue(Issue issue)
+	public async Task<ActionResult<IssueReadDto>> CreateIssue(IssueCreateDto issueCreateDto)
 	{
-		await _issueRepository.CreateIssueAsync(issue);
-		return CreatedAtAction(nameof(GetIssue), new { id = issue.Id }, issue);
+		var issue = _mapper.Map<Issue>(issueCreateDto);
+		issue = await _issueRepository.CreateIssueAsync(issue);
+		var issueReadDto = _mapper.Map<IssueReadDto>(issue);
+		return CreatedAtRoute(nameof(GetIssueById), new { id = issueReadDto.Id }, issueReadDto);
 	}
 
-	// PUT: api/issues/{id}
 	[HttpPut("{id}")]
-	public async Task<IActionResult> PutIssue(int id, Issue issue)
+	public async Task<IActionResult> UpdateIssue(int id, IssueUpdateDto issueUpdateDto)
 	{
-		if (id != issue.Id)
-		{
-			return BadRequest();
-		}
+		var issueFromRepo = await _issueRepository.GetIssueByIdAsync(id);
+		if (issueFromRepo == null) return NotFound();
 
-		await _issueRepository.UpdateIssueAsync(issue);
-		return NoContent();
+		_mapper.Map(issueUpdateDto, issueFromRepo);
+		await _issueRepository.UpdateIssueAsync(issueFromRepo); // Save changes
+
+		return NoContent(); // 204 No Content
 	}
 
-	// DELETE: api/issues/{id}
 	[HttpDelete("{id}")]
 	public async Task<IActionResult> DeleteIssue(int id)
 	{

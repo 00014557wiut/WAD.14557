@@ -1,79 +1,70 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WAD.CW1._14557.DAL.Interfaces;
+using WAD.CW1._14557.Dtos;
 using WAD.CW1._14557.Models;
 
-[Route("api/issues/{issueId}/[controller]")]
+[Route("api/issues/{issueId}/comments")]
 [ApiController]
 public class CommentsController : ControllerBase
 {
 	private readonly ICommentRepository _commentRepository;
+	private readonly IMapper _mapper;
 
-	public CommentsController(ICommentRepository commentRepository)
+	public CommentsController(ICommentRepository commentRepository, IMapper mapper)
 	{
 		_commentRepository = commentRepository;
+		_mapper = mapper;
 	}
 
-	// GET: api/issues/{issueId}/comments
 	[HttpGet]
-	public async Task<ActionResult<IEnumerable<Comment>>> GetComments(int issueId)
+	public async Task<ActionResult<IEnumerable<CommentReadDto>>> GetCommentsForIssue(int issueId)
 	{
 		var comments = await _commentRepository.GetCommentsByIssueIdAsync(issueId);
-		return Ok(comments);
+		return Ok(_mapper.Map<IEnumerable<CommentReadDto>>(comments));
 	}
 
-	// GET: api/issues/{issueId}/comments/{id}
-	[HttpGet("{id}")]
-	public async Task<ActionResult<Comment>> GetComment(int issueId, int id)
+	[HttpGet("{id}", Name = "GetCommentForIssue")]
+	public async Task<ActionResult<CommentReadDto>> GetCommentForIssue(int issueId, int id)
 	{
 		var comment = await _commentRepository.GetCommentByIdAsync(id);
-
-		if (comment == null || comment.IssueId != issueId)
-		{
-			return NotFound();
-		}
-
-		return Ok(comment);
+		if (comment == null) return NotFound();
+		return Ok(_mapper.Map<CommentReadDto>(comment));
 	}
 
-	// POST: api/issues/{issueId}/comments
 	[HttpPost]
-	public async Task<ActionResult<Comment>> PostComment(int issueId, Comment comment)
+	public async Task<ActionResult<CommentReadDto>> CreateCommentForIssue(int issueId, CommentCreateDto commentCreateDto)
 	{
-		if (comment.IssueId != issueId)
-		{
-			return BadRequest();
-		}
-
+		var comment = _mapper.Map<Comment>(commentCreateDto);
+		comment.IssueId = issueId; // Ensure correct issue ID association
 		await _commentRepository.CreateCommentAsync(comment);
-		return CreatedAtAction(nameof(GetComment), new { issueId = issueId, id = comment.Id }, comment);
+
+		var commentReadDto = _mapper.Map<CommentReadDto>(comment);
+		return CreatedAtRoute("GetCommentForIssue", new { issueId, id = commentReadDto.Id }, commentReadDto);
 	}
 
-	// PUT: api/issues/{issueId}/comments/{id}
 	[HttpPut("{id}")]
-	public async Task<IActionResult> PutComment(int id, int issueId, Comment comment)
+	public async Task<IActionResult> UpdateCommentForIssue(int issueId, int id, CommentUpdateDto commentUpdateDto)
 	{
-		if (id != comment.Id || issueId != comment.IssueId)
-		{
-			return BadRequest();
-		}
+		var commentFromRepo = await _commentRepository.GetCommentByIdAsync(id);
+		if (commentFromRepo == null || commentFromRepo.IssueId != issueId) return NotFound();
 
-		await _commentRepository.UpdateCommentAsync(comment);
-		return NoContent();
+		_mapper.Map(commentUpdateDto, commentFromRepo);
+		await _commentRepository.UpdateCommentAsync(commentFromRepo); // Save changes
+
+		return NoContent(); // 204 No Content
 	}
 
-	// DELETE: api/issues/{issueId}/comments/{id}
 	[HttpDelete("{id}")]
-	public async Task<IActionResult> DeleteComment(int issueId, int id)
+	public async Task<IActionResult> DeleteCommentForIssue(int issueId, int id)
 	{
-		var comment = await _commentRepository.GetCommentByIdAsync(id);
-		if (comment == null || comment.IssueId != issueId)
-		{
-			return NotFound();
-		}
+		var commentFromRepo = await _commentRepository.GetCommentByIdAsync(id);
+		if (commentFromRepo == null || commentFromRepo.IssueId != issueId) return NotFound();
 
 		await _commentRepository.DeleteCommentAsync(id);
 		return NoContent();
 	}
 }
+

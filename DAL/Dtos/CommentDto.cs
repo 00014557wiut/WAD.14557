@@ -1,8 +1,20 @@
 ﻿namespace WAD.CW1._14557.Dtos
 {
-	public class CommentDto
+	public class CommentReadDto
 	{
-		public string Title { get; set; }
-		public string Description { get; set; }
+		public int Id { get; set; }
+		public string Text { get; set; }
+		public int IssueId { get; set; }
+	}
+
+	public class CommentCreateDto
+	{
+		public string Text { get; set; }
+		public int IssueId { get; set; }
+	}
+
+	public class CommentUpdateDto
+	{
+		public string Text { get; set; }
 	}
 }
