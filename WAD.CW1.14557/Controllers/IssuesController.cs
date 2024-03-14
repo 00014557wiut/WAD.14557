@@ -52,7 +52,7 @@ public class IssuesController : ControllerBase
 		_mapper.Map(issueUpdateDto, issueFromRepo);
 		await _issueRepository.UpdateIssueAsync(issueFromRepo); // Save changes
 
-		return NoContent(); // 204 No Content
+		return Ok("Updated issue with id:" + id);
 	}
 
 	[HttpDelete("{id}")]
